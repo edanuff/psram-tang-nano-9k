@@ -6,17 +6,17 @@
 
 -mod_name Gowin_rPLL
 -file_name gowin_rpll
--path D:/Gowin/dev/gowin-playground/simple_ddr/src/gowin_rpll/
+-path C:/Users/Dominic/Documents/GitHub/psram-tang-nano-9k/src/gowin_rpll/
 -type PLL
 -rPll true
 -file_type vlg
 -dev_type GW1NR-9C
 -dyn_idiv_sel false
--idiv_sel 8
+-idiv_sel 1
 -dyn_fbdiv_sel false
--fbdiv_sel 3
+-fbdiv_sel 2
 -dyn_odiv_sel false
--odiv_sel 48
+-odiv_sel 8
 -dyn_da_en false
 -rst_sig false
 -rst_sig_p false
@@ -26,7 +26,7 @@
 -clkout_bypass false
 -en_clkoutp true
 -clkoutp_bypass false
--psda_sel 12
+-psda_sel 4
 -dutyda_sel 8
 -en_clkoutd false
 -clkoutd_bypass false

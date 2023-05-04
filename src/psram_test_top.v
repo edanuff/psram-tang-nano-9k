@@ -20,7 +20,7 @@ module memory_test (
 localparam [21:0] BYTES = 1024*1024;    // Test write/read this many bytes
 
 // Change PLL and here to choose another speed.
-localparam FREQ = 81_000_000;           
+localparam FREQ = 54_000_000;           
 localparam LATENCY = 3;
 //localparam FREQ = 102_600_000;           
 //localparam LATENCY = 4;
@@ -51,14 +51,14 @@ wire [15:0] dout;
 wire [7:0] dout_byte = address[0] ? dout[15:8] : dout[7:0];
 
 PsramController #(
-    .LATENCY(LATENCY)
+    .LATENCY(LATENCY),
+    .FREQ(FREQ)
 ) mem_ctrl(
     .clk(clk), .clk_p(clk_p), .resetn(sys_resetn), .read(read), .write(write), .byte_write(byte_write),
     .addr(address), .din(din), .dout(dout), .busy(busy),
     .O_psram_ck(O_psram_ck), .IO_psram_rwds(IO_psram_rwds), .IO_psram_dq(IO_psram_dq),
     .O_psram_cs_n(O_psram_cs_n)
 );
-defparam mem_clk_freq=FREQ;
 
 // The test ------------------------------------------------
 
