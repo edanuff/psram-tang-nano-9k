@@ -1,3 +1,4 @@
 **/impl/
 *.user
 *.sublime-*
+*.bak
