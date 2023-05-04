@@ -9,7 +9,6 @@ module memory_test (
     output uart_txp,
 
     output [1:0] O_psram_ck,       // Magic ports for PSRAM to be inferred
-    output [1:0] O_psram_ck_n,
     inout [1:0] IO_psram_rwds,
     inout [15:0] IO_psram_dq,
     output [1:0] O_psram_reset_n,
@@ -20,7 +19,7 @@ module memory_test (
 localparam [21:0] BYTES = 1024*1024;    // Test write/read this many bytes
 
 // Change PLL and here to choose another speed.
-localparam FREQ = 67_500_000;           
+localparam FREQ = 81_000_000;           
 localparam LATENCY = 3;
 //localparam FREQ = 102_600_000;           
 //localparam LATENCY = 4;
@@ -225,23 +224,33 @@ always @(posedge sys_clk) begin
         if (state_p == TEST_FAIL_READ_TIMEOUT) `print("FAIL. Read time out.\n", STR);
         if (state_p == TEST_FAIL_READ_WRONG) `print("FAIL. Read wrong data.\n", STR);
 
-        if (state_p == TEST_DONE || state_p == TEST_FAIL_INIT_TIMEOUT || state_p == TEST_FAIL_READ_TIMEOUT || state_p == TEST_FAIL_READ_WRONG || state_p== TEST_FAIL_WRITE_TIMEOUT)
+        if (state_p == TEST_DONE || 
+            state_p == TEST_FAIL_INIT_TIMEOUT || 
+            state_p == TEST_FAIL_READ_TIMEOUT ||  
+            state_p == TEST_FAIL_WRITE_TIMEOUT)
+            print_counters <= 6;
+        else if (state_p == TEST_FAIL_READ_WRONG)
             print_counters <= 1;
     end
 
     if (print_counters > 0 && print_counters == print_counters_p && print_state == PRINT_IDLE_STATE) begin
         case (print_counters)
-        1: `print("Latency counters: write_1x=", STR);
-        2: `print(write_1x, 3);
-        3: `print(", write_2x=", STR);
-        4: `print(write_2x, 3);
-        5: `print(", read_1x=", STR);
-        6: `print(read_1x, 3);
-        7: `print(", read_2x=", STR);
-        8: `print(read_2x, 3);
-        9: `print("\n", STR);
+        1: `print("Expected ", STR);
+        2: `print(`hash(address), 1);
+        3: `print(", read ",STR);
+        4: `print(dout, 1);
+        5: `print(". ", STR);
+        6: `print("Latency counters: write_1x=", STR);
+        7: `print(write_1x, 3);
+        8: `print(", write_2x=", STR);
+        9: `print(write_2x, 3);
+        10: `print(", read_1x=", STR);
+        11: `print(read_1x, 3);
+        12: `print(", read_2x=", STR);
+        13: `print(read_2x, 3);
+        14: `print("\n", STR);
         endcase
-        print_counters <= print_counters == 9 ? 0 : print_counters + 1;
+        print_counters <= print_counters == 14 ? 0 : print_counters + 1;
     end
 
 end
