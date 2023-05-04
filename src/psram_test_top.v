@@ -202,28 +202,30 @@ end
 `ifndef NO_UART_PRINT
 `include "print.v"
 defparam tx.uart_freq=115200;
-defparam tx.clk_freq=FREQ;
-assign print_clk = clk;
+defparam tx.clk_freq=27_000_000;
+assign print_clk = sys_clk;
 assign txp = uart_txp;
 
 reg [3:0] state_p;
+reg [3:0] state_p2; // delay for clock crossing
 reg [3:0] print_counters = 0;       // 1. "write_1x=", 2. write_1x, 3. ", write_2x=", 4. write_2x, 5. ", read_1x=", 6. "read_1x", 7, ", read_2x=", 8. read_2x., 9. "\n"
 reg [3:0] print_counters_p;
 
-always @(posedge clk) begin
+always @(posedge sys_clk) begin
     state_p <= state;
+    state_p2 <= state_p;
     print_counters_p <= print_counters;
-    if (state != state_p) begin
-        if (state == TEST_INIT) `print("Initializing HyperRAM test...\n", STR);
-        if (state == TEST_WRITE) `print("Writing...\n", STR);
-        if (state == TEST_READ) `print("Reading...\n", STR);
-        if (state == TEST_DONE) `print("All done successfully.\n", STR);
-        if (state == TEST_FAIL_INIT_TIMEOUT) `print("FAIL. Initialization timeout.\n", STR);
-        if (state == TEST_FAIL_WRITE_TIMEOUT) `print("FAIL. Write time out.\n", STR);
-        if (state == TEST_FAIL_READ_TIMEOUT) `print("FAIL. Read time out.\n", STR);
-        if (state == TEST_FAIL_READ_WRONG) `print("FAIL. Read wrong data.\n", STR);
+    if (state_p != state_p2) begin
+        if (state_p == TEST_INIT) `print("Initializing HyperRAM test...\n", STR);
+        if (state_p == TEST_WRITE) `print("Writing...\n", STR);
+        if (state_p == TEST_READ) `print("Reading...\n", STR);
+        if (state_p == TEST_DONE) `print("All done successfully.\n", STR);
+        if (state_p == TEST_FAIL_INIT_TIMEOUT) `print("FAIL. Initialization timeout.\n", STR);
+        if (state_p == TEST_FAIL_WRITE_TIMEOUT) `print("FAIL. Write time out.\n", STR);
+        if (state_p == TEST_FAIL_READ_TIMEOUT) `print("FAIL. Read time out.\n", STR);
+        if (state_p == TEST_FAIL_READ_WRONG) `print("FAIL. Read wrong data.\n", STR);
 
-        if (state == TEST_DONE || state == TEST_FAIL_INIT_TIMEOUT || state == TEST_FAIL_READ_TIMEOUT || state == TEST_FAIL_READ_WRONG || state == TEST_FAIL_WRITE_TIMEOUT)
+        if (state_p == TEST_DONE || state_p == TEST_FAIL_INIT_TIMEOUT || state_p == TEST_FAIL_READ_TIMEOUT || state_p == TEST_FAIL_READ_WRONG || state_p== TEST_FAIL_WRITE_TIMEOUT)
             print_counters <= 1;
     end
 
