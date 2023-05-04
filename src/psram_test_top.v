@@ -107,7 +107,11 @@ always @(posedge clk) begin
         new_state <= TEST_INIT;
         state <= PAUSE;
         error <= 0;
-
+        //DB: reset counters!
+        write_1x <= 'd0;
+        write_2x <= 'd0;
+        read_1x <= 'd0;
+        read_2x <= 'd0;
     end else if (state == TEST_INIT) begin
         // wait for memory to become ready
         if (!busy) begin
