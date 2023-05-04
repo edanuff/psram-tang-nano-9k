@@ -9,6 +9,7 @@ module memory_test (
     output uart_txp,
 
     output [1:0] O_psram_ck,       // Magic ports for PSRAM to be inferred
+    output [1:0] O_psram_ck_n,
     inout [1:0] IO_psram_rwds,
     inout [15:0] IO_psram_dq,
     output [1:0] O_psram_reset_n,
