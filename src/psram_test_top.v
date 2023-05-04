@@ -83,7 +83,7 @@ reg tick;                   // pulse once per 0.1 second
 reg [3:0] ticks = 0;        // counter for 0.1 second delays
 reg error;
 assign dout_parity = dout[7] & dout[6] & dout[5] & dout[4] & dout[3] & dout[2] & dout[1] & dout[0];
-assign led = ~{error, dout_parity, dout, state};
+assign led = ~{error, dout_parity, state};
 
 // pipeline addr+1 to meet timing constraint
 reg [8:0] new_addr_0;
