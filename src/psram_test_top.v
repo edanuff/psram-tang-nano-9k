@@ -20,7 +20,7 @@ module memory_test (
 localparam [21:0] BYTES = 1024*1024;    // Test write/read this many bytes
 
 // Change PLL and here to choose another speed.
-localparam FREQ = 81_000_000;           
+localparam FREQ = 54_000_000;           
 localparam LATENCY = 3;
 //localparam FREQ = 102_600_000;           
 //localparam LATENCY = 4;
@@ -45,7 +45,7 @@ Gowin_rPLL pll(
 
 // Memory Controller under test ---------------------------
 reg read, readd, write, byte_write;
-reg [21:0] address;
+reg [23:0] address;
 reg [15:0] din;
 wire [15:0] dout;
 wire [7:0] dout_byte = address[0] ? dout[15:8] : dout[7:0];
@@ -55,7 +55,7 @@ PsramController #(
     .FREQ(FREQ)
 ) mem_ctrl(
     .clk(clk), .clk_p(clk_p), .resetn(sys_resetn), .read(read), .write(write), .byte_write(byte_write),
-    .addr(address), .din(din), .dout(dout), .busy(busy),
+    .addr(address[21:0]), .din(din), .dout(dout), .busy(busy),
     .O_psram_ck(O_psram_ck), .IO_psram_rwds(IO_psram_rwds), .IO_psram_dq(IO_psram_dq),
     .O_psram_cs_n(O_psram_cs_n)
 );
@@ -72,6 +72,9 @@ localparam [3:0] TEST_FAIL_WRITE_TIMEOUT = 4'd6;
 localparam [3:0] TEST_FAIL_READ_TIMEOUT = 4'd7;
 localparam [3:0] TEST_FAIL_READ_WRONG = 4'd8;
 localparam [3:0] PAUSE = 4'd9;
+localparam [3:0] TEST_READ_DUMP = 4'd10;
+localparam [3:0] TEST_READ_DUMP_DONE = 4'd11;
+localparam [3:0] TEST_READ_DUMP_NEXT = 4'd13;
 
 // pass in address to get hash value
 `define hash(a) (a[7:0] ^ a[15:8] ^ a[21:16] ^ 8'hc3)
@@ -112,9 +115,11 @@ always @(posedge clk) begin
         write_2x <= 'd0;
         read_1x <= 'd0;
         read_2x <= 'd0;
+        address <= 0;
     end else if (state == TEST_INIT) begin
         // wait for memory to become ready
         if (!busy) begin
+            address <= 0;
             new_state <= TEST_WRITE;
             state <= PAUSE;
         end else if (ticks == 5) begin   // 0.5 second timeout
@@ -123,7 +128,7 @@ always @(posedge clk) begin
             state <= PAUSE;
         end
 
-    end if (state == TEST_WRITE) begin
+    end else if (state == TEST_WRITE) begin
         // write some bytes
         cycle <= cycle + 1;
         if (cycle == 0) begin
@@ -138,8 +143,9 @@ always @(posedge clk) begin
             else
                 write_1x <= write_1x + 1;
             if (address == BYTES - 1) begin
-                new_state <= TEST_READ;
+                new_state <= TEST_READ_DUMP;
                 state <= PAUSE;
+                address <= 0;
             end else
                 address <= new_addr;
         end else if (cycle == 5+LATENCY*2) begin
@@ -148,7 +154,7 @@ always @(posedge clk) begin
             state <= PAUSE;
         end
 
-    end if (state == TEST_READ) begin
+    end else if (state == TEST_READ) begin
         // read and verify some bytes
         cycle <= cycle + 1;
         if (cycle == 0) begin
@@ -176,8 +182,33 @@ always @(posedge clk) begin
             state <= PAUSE;
         end
 
+    end else if (state == TEST_READ_DUMP) begin
+        // read and verify some bytes
+        cycle <= cycle + 1;
+        if (cycle == 0) begin
+            // issue read command
+            read <= 1;
+        end else if (!read && !busy) begin
+            // read finished
+            cycle <= 0;
+            state <= TEST_READ_DUMP_DONE;
+        end
+    end else if (state == TEST_READ_DUMP_DONE) begin
+        cycle <= cycle + 1;
+        if (cycle[3]) begin
+            state <= PAUSE;
+            new_state <= TEST_READ_DUMP_NEXT;
+            cycle <= 0;
+        end
+    end else if (state == TEST_READ_DUMP_NEXT) begin
+        if (new_addr[4]) begin
+            state <= TEST_READ;
+            address <= 0;
+        end else begin
+            address <= new_addr;
+            state <= TEST_READ_DUMP;
+        end
     end else if (state == PAUSE) begin
-        address <= 0;
         // pause for 0.1 seconds for print to finish, then enter new_state
         if (ticks == 2 || NO_PAUSE) begin     // pause for 0.1 second
             ticks <= 0;
@@ -208,8 +239,8 @@ assign txp = uart_txp;
 
 reg [3:0] state_p;
 reg [3:0] state_p2; // delay for clock crossing
-reg [3:0] print_counters = 0;       // 1. "write_1x=", 2. write_1x, 3. ", write_2x=", 4. write_2x, 5. ", read_1x=", 6. "read_1x", 7, ", read_2x=", 8. read_2x., 9. "\n"
-reg [3:0] print_counters_p;
+reg [4:0] print_counters = 0;       // 1. "write_1x=", 2. write_1x, 3. ", write_2x=", 4. write_2x, 5. ", read_1x=", 6. "read_1x", 7, ", read_2x=", 8. read_2x., 9. "\n"
+reg [4:0] print_counters_p;
 
 always @(posedge sys_clk) begin
     state_p <= state;
@@ -218,7 +249,7 @@ always @(posedge sys_clk) begin
     if (state_p != state_p2) begin
         if (state_p == TEST_INIT) `print("Initializing HyperRAM test...\n", STR);
         if (state_p == TEST_WRITE) `print("Writing...\n", STR);
-        if (state_p == TEST_READ) `print("Reading...\n", STR);
+        if (state_p == TEST_READ) `print("\nReading...\n", STR);
         if (state_p == TEST_DONE) `print("All done successfully.\n", STR);
         if (state_p == TEST_FAIL_INIT_TIMEOUT) `print("FAIL. Initialization timeout.\n", STR);
         if (state_p == TEST_FAIL_WRITE_TIMEOUT) `print("FAIL. Write time out.\n", STR);
@@ -232,6 +263,8 @@ always @(posedge sys_clk) begin
             print_counters <= 6;
         else if (state_p == TEST_FAIL_READ_WRONG)
             print_counters <= 1;
+        else if (state_p == TEST_READ_DUMP_DONE)
+            print_counters <= 15;
     end
 
     if (print_counters > 0 && print_counters == print_counters_p && print_state == PRINT_IDLE_STATE) begin
@@ -250,8 +283,12 @@ always @(posedge sys_clk) begin
         12: `print(", read_2x=", STR);
         13: `print(read_2x, 3);
         14: `print("\n", STR);
+        15: `print(address, 3);
+        16: `print(" : ", STR);
+        17: `print(dout_byte, 1);
+        18: `print("\n", STR);
         endcase
-        print_counters <= print_counters == 14 ? 0 : print_counters + 1;
+        print_counters <= print_counters == 14 || print_counters == 18 ? 0 : print_counters + 1;
     end
 
 end
