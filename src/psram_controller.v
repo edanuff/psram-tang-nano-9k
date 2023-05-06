@@ -122,12 +122,19 @@ always @(posedge clk) begin
     end
 
     if (state == WRITE_ST) begin
-        if (cycles_sr[5])
-            additional_latency <= rwds_in_fal;  // sample RWDS to see if we need additional latency
+//        if (cycles_sr[5])
+//            additional_latency <= rwds_in_fal;  // sample RWDS to see if we need additional latency
+//        // Write timing is trickier - we sample RWDS at cycle 5 to determine whether we need to wait another tACC.
+//        // If it is low, data starts at 2+LATENCY. If high, then data starts at 2+LATENCY*2.
+//        if (cycles_sr[2+LATENCY] && (LATENCY == 3 ? ~rwds_in_fal : ~additional_latency)
+//            || cycles_sr[2+LATENCY*2])
+//        if (cycles_sr[5])
+//            additional_latency <= rwds_in_fal;  // sample RWDS to see if we need additional latency
         // Write timing is trickier - we sample RWDS at cycle 5 to determine whether we need to wait another tACC.
         // If it is low, data starts at 2+LATENCY. If high, then data starts at 2+LATENCY*2.
-        if (cycles_sr[2+LATENCY] && (LATENCY == 3 ? ~rwds_in_fal : ~additional_latency)
-            || cycles_sr[2+LATENCY*2])
+//        else if ((cycles_sr[2+LATENCY] && ~additional_latency)
+//            || cycles_sr[2+LATENCY*2])
+        if (cycles_sr[2+LATENCY])
         begin
             rwds_oen <= 0;
             rwds_out_ris <= byte_write ? ~addr[0] : 1'b0;       // RWDS is data mask (1 means not writing)

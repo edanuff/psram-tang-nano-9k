@@ -4,7 +4,7 @@
 //GOWIN Version: V1.9.8.09 Education
 //Part Number: GW1NR-LV9QN88PC6/I5
 //Device: GW1NR-9C
-//Created Time: Fri May 05 16:14:46 2023
+//Created Time: Fri May 05 17:47:14 2023
 
 module Gowin_rPLL (clkout, clkoutp, clkin);
 
