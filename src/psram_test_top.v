@@ -17,10 +17,10 @@ module memory_test (
 );
 
 // Customization of the test
-localparam [21:0] BYTES = 1024*1024;    // Test write/read this many bytes
+localparam [23:0] BYTES = 4*1024*1024;    // Test write/read this many bytes
 
 // Change PLL and here to choose another speed.
-localparam FREQ = 81_000_000;           
+localparam FREQ = 96_000_000;           
 localparam LATENCY = 3;
 //localparam FREQ = 102_600_000;           
 //localparam LATENCY = 4;
@@ -77,7 +77,7 @@ localparam [3:0] TEST_READ_DUMP_DONE = 4'd11;
 localparam [3:0] TEST_READ_DUMP_NEXT = 4'd13;
 
 // pass in address to get hash value
-`define hash(a) (a[7:0] ^ a[15:8] ^ a[21:16] ^ 8'hc3)
+`define hash(a) (a[7:0] ^ a[15:8] ^ a[23:16] ^ 8'hc3)
 
 reg [3:0] state, new_state;
 reg [4:0] cycle = 0;        // max 16
@@ -91,14 +91,14 @@ assign led = ~{error, dout_parity, state};
 // pipeline addr+1 to meet timing constraint
 reg [8:0] new_addr_0;
 reg [8:0] new_addr_1;
-reg [21:0] new_addr;        // available after 3 cycles
+reg [23:0] new_addr;        // available after 3 cycles
 always @(posedge clk) begin
     // stage 0
     new_addr_0 = address[7:0] + 1;
     // stage 1
     new_addr_1 = address[15:8] + new_addr_0[8];
     // stage 2, add higher 6 bits
-    new_addr = {address[21:16] + new_addr_1[8], new_addr_1[7:0], new_addr_0[7:0]};
+    new_addr = {address[23:16] + new_addr_1[8], new_addr_1[7:0], new_addr_0[7:0]};
 end
 
 always @(posedge clk) begin
@@ -142,7 +142,7 @@ always @(posedge clk) begin
                 write_2x <= write_2x + 1;
             else
                 write_1x <= write_1x + 1;
-            if (address == BYTES - 1) begin
+            if (new_addr >= BYTES) begin
                 new_state <= TEST_READ_DUMP;
                 state <= PAUSE;
                 address <= 0;
@@ -171,7 +171,7 @@ always @(posedge clk) begin
                 new_state <= TEST_FAIL_READ_WRONG;
                 error <= 1'b1;
                 state <= PAUSE;
-            end else if (address == BYTES - 1) begin
+            end else if (new_addr >= BYTES) begin
                 new_state <= TEST_DONE;
                 state <= PAUSE;
             end else
