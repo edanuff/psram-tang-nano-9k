@@ -31,7 +31,7 @@ localparam LATENCY = 4;
 // For GAO debug
 //localparam [21:0] BYTES = 2;
 //localparam NO_PAUSE = 1;
-localparam NO_PAUSE = 0;                // Pause between states to allow UART printing
+parameter NO_PAUSE = 0;                // Pause between states to allow UART printing
 
 // End of customization
 

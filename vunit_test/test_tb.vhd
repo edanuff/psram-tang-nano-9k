@@ -31,6 +31,8 @@ architecture rtl of test_tb is
 	signal i_O_psram_reset_n	: std_logic_vector(1 downto 0);
 	signal i_O_psram_cs_n		: std_logic_vector(1 downto 0);
 
+	signal i_GSRI				: std_logic;
+
 begin
 	p_syscon_clk:process
 	begin
@@ -53,8 +55,10 @@ begin
 			if run("boop") then
 
 				i_SYS_RESn <= '0';
-				wait for 1 us;
+				i_GSRI <= '0';
+				wait for 69 us; -- must be > pll lock time
 				i_SYS_RESn <= '1';
+				i_GSRI <= '1';
 
 				wait for 500 us;
 
@@ -69,6 +73,9 @@ begin
 	end process;
 
 	e_dut:entity work.memory_test
+	generic map (
+		NO_PAUSE	=> 1
+		)
 	port map (
 
     sys_clk			=> i_BRD_CLK,
@@ -85,5 +92,28 @@ begin
     O_psram_reset_n	=> i_O_psram_reset_n,
     O_psram_cs_n	=> i_O_psram_cs_n
 	);
+
+	e_psram:entity work.s27kl0642
+	port map (
+    DQ7      => i_IO_psram_dq(7),
+    DQ6      => i_IO_psram_dq(6),
+    DQ5      => i_IO_psram_dq(5),
+    DQ4      => i_IO_psram_dq(4),
+    DQ3      => i_IO_psram_dq(3),
+    DQ2      => i_IO_psram_dq(2),
+    DQ1      => i_IO_psram_dq(1),
+    DQ0      => i_IO_psram_dq(0),
+    RWDS     => i_IO_psram_rwds(0),
+
+    CSNeg    => i_O_psram_cs_n(0),
+    CK       => i_O_psram_ck(0),
+	CKn		 => i_O_psram_ck_n(0),
+    RESETNeg => i_O_psram_reset_n(0)
+    );
+
+	GSR: entity work.GSR
+	port map (
+		GSRI => i_GSRI
+		);
 
 end rtl;

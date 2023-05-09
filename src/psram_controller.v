@@ -157,6 +157,7 @@ always @(posedge clk) begin
     begin
         rwds_oen <= 1;
         ram_cs_n <= 1;
+        ck_e <= 0;
         state <= IDLE_ST;
     end
 
