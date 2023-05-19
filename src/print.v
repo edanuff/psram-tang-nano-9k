@@ -22,6 +22,7 @@ parameter PRINT_CONV_STATE = 3;
 reg[1:0] print_state=PRINT_IDLE_STATE;
 
 wire[7:0] hex_lib[15:0];
+
 assign hex_lib[4'h0] = 8'h30;
 assign hex_lib[4'h1] = 8'h31;
 assign hex_lib[4'h2] = 8'h32;
@@ -101,7 +102,7 @@ end
 
 reg uart_en;
 wire uart_bz;
-wire uart_txp;
+//wire uart_txp;
 uart_tx_V2 tx(print_clk, print_seq[seq_head], uart_en, uart_bz, uart_txp);
 
 //always block to send the data via UART

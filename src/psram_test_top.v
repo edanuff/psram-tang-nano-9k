@@ -21,7 +21,7 @@ localparam [23:0] BYTES = 4*1024*1024;    // Test write/read this many bytes
 
 // Change PLL and here to choose another speed.
 localparam FREQ = 96_000_000;           
-localparam LATENCY = 3;
+localparam LATENCY = 4;
 //localparam FREQ = 102_600_000;           
 //localparam LATENCY = 4;
 
@@ -31,7 +31,7 @@ localparam LATENCY = 3;
 // For GAO debug
 //localparam [21:0] BYTES = 2;
 //localparam NO_PAUSE = 1;
-localparam NO_PAUSE = 0;                // Pause between states to allow UART printing
+parameter NO_PAUSE = 0;                // Pause between states to allow UART printing
 
 // End of customization
 
@@ -138,7 +138,7 @@ always @(posedge clk) begin
         end else if (!write && !busy) begin
             // write finished
             cycle <= 0;
-            if (cycle > 4+LATENCY)
+            if (cycle > 5+LATENCY)
                 write_2x <= write_2x + 1;
             else
                 write_1x <= write_1x + 1;

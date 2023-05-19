@@ -39,6 +39,7 @@ localparam [2:0] CONFIG_ST= 3'd1;
 localparam [2:0] IDLE_ST = 3'd2;
 localparam [2:0] READ_ST = 3'd3;
 localparam [2:0] WRITE_ST = 3'd4;
+localparam [2:0] WRITE_STOP_ST = 3'd5;
 
 reg cfg_now, dq_oen, ram_cs_n, ck_e, ck_e_p;
 reg wait_for_rd_data;
@@ -132,16 +133,32 @@ always @(posedge clk) begin
 //            additional_latency <= rwds_in_fal;  // sample RWDS to see if we need additional latency
         // Write timing is trickier - we sample RWDS at cycle 5 to determine whether we need to wait another tACC.
         // If it is low, data starts at 2+LATENCY. If high, then data starts at 2+LATENCY*2.
-//        else if ((cycles_sr[2+LATENCY] && ~additional_latency)
-//            || cycles_sr[2+LATENCY*2])
-        if (cycles_sr[2+LATENCY])
+
+        if (cycles_sr[5])
+            additional_latency <= IO_psram_rwds[0];  // sample RWDS to see if we need additional latency
+        else if (cycles_sr[2+LATENCY-1])
         begin
+            rwds_oen <= 0;
+            rwds_out_ris <= 1'b0;       // RWDS preamble
+            rwds_out_fal <= 1'b0;
+        end
+        else if ((cycles_sr[2+LATENCY] && ~additional_latency)
+            || cycles_sr[2+LATENCY*2]) begin
+//        else if(cycles_sr[2+LATENCY]) begin
             rwds_oen <= 0;
             rwds_out_ris <= byte_write ? ~addr[0] : 1'b0;       // RWDS is data mask (1 means not writing)
             rwds_out_fal <= byte_write ? addr[0] : 1'b0;
             dq_sr[63:48] <= w_din;
-            state <= IDLE_ST;
+            state <= WRITE_STOP_ST;
         end
+    end
+
+    if (state == WRITE_STOP_ST)
+    begin
+        rwds_oen <= 1;
+        ram_cs_n <= 1;
+        ck_e <= 0;
+        state <= IDLE_ST;
     end
 
     if (~resetn) begin
