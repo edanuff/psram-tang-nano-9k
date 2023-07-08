@@ -21,15 +21,21 @@ localparam [23:0] BYTES = 4*1024*1024;    // Test write/read this many bytes
 //localparam [23:0] BYTES = 128;    // Test write/read this many bytes
 
 // Change PLL and here to choose another speed.
-//localparam FREQ = 96_000_000;           
-localparam LATENCY = 4;
+//localparam FREQ = 96_000_000;
+//localparam LATENCY = 4;
 //localparam FREQ = 102_600_000;           
 //localparam LATENCY = 4;
-//localparam FREQ = 100_286_000;           
-//localparam LATENCY = 4;
-//localparam FREQ = 100_281_250;
-//localparam FREQ = 100_287_500;                 
-localparam FREQ = 100_000_000;
+
+// TESTING WITH DAVID BANKS FORK
+// https://github.com/hoglet67/AtomFpga/blob/master/gowin/AtomFpga_TangNano9K/src/psram_controller.vhd
+//
+
+//localparam FREQ = 96_000_000;     // works with 100.286 MHz PLL           
+//localparam FREQ = 100_286_000;    // does not work with 100.286 MHz PLL           
+//localparam FREQ = 100_281_250;    // does not work with 100.286 MHz PLL     
+//localparam FREQ = 100_287_500;    // does not work with 100.286 MHz PLL                 
+localparam FREQ = 100_000_000;      // works with 100.286 MHz PLL
+localparam LATENCY = 4;
 
 // Remove UART print module for timing closure (check LED5 for error)
 //`define NO_UART_PRINT
@@ -44,6 +50,7 @@ parameter NO_PAUSE = 0;                // Pause between states to allow UART pri
 assign O_psram_reset_n = sys_resetn;
 
 //Gowin_rPLL pll(
+// Use 100.286 MHz PLL
 Gowin_rPLL2 pll(
     .clkout(clk),        // MHZ main clock
     .clkoutp(clk_p),     // MHZ phase shifted (90 degrees)
