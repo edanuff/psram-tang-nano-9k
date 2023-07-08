@@ -77,7 +77,7 @@ always @(posedge clk) begin
     end
     if (state == CONFIG_ST) begin
         if (cycles_sr[0]) begin
-            dq_sr <= {8'h60, 8'h00, 8'h01, 8'h00, 8'h00, 8'h00, 8'h8f, CR_LATENCY, 4'h7};      // last byte, 'e' (3 cycle latency max 83Mhz), '7' (variable 1x/2x latency)
+            dq_sr <= {8'h60, 8'h00, 8'h01, 8'h00, 8'h00, 8'h00, 8'h8f, CR_LATENCY, 4'hF};      // last byte, 'e' (3 cycle latency max 83Mhz), '7' (variable 1x/2x latency)
             dq_oen <= 0;
             ck_e <= 1;      // this needs to be earlier 1 cycle to allow for phase shifted clk_p
         end 

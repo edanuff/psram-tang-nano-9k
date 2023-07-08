@@ -18,12 +18,18 @@ module memory_test (
 
 // Customization of the test
 localparam [23:0] BYTES = 4*1024*1024;    // Test write/read this many bytes
+//localparam [23:0] BYTES = 128;    // Test write/read this many bytes
 
 // Change PLL and here to choose another speed.
-localparam FREQ = 96_000_000;           
+//localparam FREQ = 96_000_000;           
 localparam LATENCY = 4;
 //localparam FREQ = 102_600_000;           
 //localparam LATENCY = 4;
+//localparam FREQ = 100_286_000;           
+//localparam LATENCY = 4;
+//localparam FREQ = 100_281_250;
+//localparam FREQ = 100_287_500;                 
+localparam FREQ = 100_000_000;
 
 // Remove UART print module for timing closure (check LED5 for error)
 //`define NO_UART_PRINT
@@ -37,7 +43,8 @@ parameter NO_PAUSE = 0;                // Pause between states to allow UART pri
 
 assign O_psram_reset_n = sys_resetn;
 
-Gowin_rPLL pll(
+//Gowin_rPLL pll(
+Gowin_rPLL2 pll(
     .clkout(clk),        // MHZ main clock
     .clkoutp(clk_p),     // MHZ phase shifted (90 degrees)
     .clkin(sys_clk)      // 27Mhz system clock
@@ -56,7 +63,7 @@ PsramController #(
 ) mem_ctrl(
     .clk(clk), .clk_p(clk_p), .resetn(sys_resetn), .read(read), .write(write), .byte_write(byte_write),
     .addr(address[21:0]), .din(din), .dout(dout), .busy(busy),
-    .O_psram_ck(O_psram_ck), .IO_psram_rwds(IO_psram_rwds), .IO_psram_dq(IO_psram_dq),
+    .O_psram_ck(O_psram_ck), .O_psram_ck_n(O_psram_ck_n), .IO_psram_rwds(IO_psram_rwds), .IO_psram_dq(IO_psram_dq),
     .O_psram_cs_n(O_psram_cs_n)
 );
 
